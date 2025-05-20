@@ -27,6 +27,14 @@ app.use('/order',orderRoute);
 app.use('/fuel',fuelRoute);
 app.use('/payment',paymentRoute);
 
+app.get('/', (req, res) => {
+res.send({
+    activeStatus: true,
+    error:false,
+    message: "Welcome to Fuel Station API",
+})
+})
+
 //app.use('/quantity', quantityRoute)
 
 const PORT= 5001;
