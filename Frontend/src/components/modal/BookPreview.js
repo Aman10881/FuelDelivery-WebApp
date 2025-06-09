@@ -4,6 +4,7 @@ import { BsFuelPump } from "react-icons/bs";
 import authService from "../../services/auth.service";
 import { getDistance } from "geolib";
 import OnlineScanner from "../../assets/images/qr.jpg";
+
 function BookPreview({
   order,
   setOnCancel,
@@ -21,6 +22,7 @@ function BookPreview({
   const deliveryCharge = 30;
   const { location, name, fuel } = order;
   const [pointer, setPointer] = useState(location);
+  const [showQR, setShowQR] = useState(false);
   // Ensure that lat and lng are not undefined
   const isValidLocation = location && location.lat !== undefined && location.lng !== undefined;
   const isValidAddress = address && address.lat !== undefined && address.lng !== undefined;
@@ -48,7 +50,25 @@ function BookPreview({
       cash : totalPrice
     })
   },[totalPrice])
-  
+
+  const handleQRProceed = () => {
+    setMethod({
+      online: {
+        amount: totalPrice,
+        status: "success"
+      }
+    });
+    setShowQR(false);
+    setOnProceed({ preventDefault: () => {} });
+  };
+
+  const handleQRCancel = () => {
+    setShowQR(false);
+    setMethod({
+      cash: totalPrice
+    });
+  };
+
   return (
     <>
       <div className="justify-center h-full flex lg:my-10 md:my-10 overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
@@ -105,11 +125,7 @@ function BookPreview({
                         name="method"
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setMethod({
-                              online: {
-                                amount: totalPrice,
-                              },
-                            });
+                            setShowQR(true);
                           }
                         }}
                         class="w-4 h-4 text-blue-600 bg-gray-100 border border-[#F59337] focus:ring-blue-500 "
@@ -131,9 +147,7 @@ function BookPreview({
                         onChange={(e) => {
                           if (e.target.checked) {
                             setMethod({
-                              cash: 
-                                totalPrice
-                              ,
+                              cash: totalPrice
                             });
                           }
                         }}
@@ -196,6 +210,37 @@ function BookPreview({
         </div>
       </div>
       <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
+
+      {showQR && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4 text-center">Scan QR to Pay</h2>
+            
+            <div className="flex justify-center mb-4">
+              <img src={OnlineScanner} alt="Payment QR Code" className="w-64 h-64" />
+            </div>
+
+            <div className="text-center mb-4">
+              <p className="text-lg font-semibold">Amount: ₹{totalPrice}</p>
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={handleQRProceed}
+                className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600"
+              >
+                Proceed
+              </button>
+              <button
+                onClick={handleQRCancel}
+                className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

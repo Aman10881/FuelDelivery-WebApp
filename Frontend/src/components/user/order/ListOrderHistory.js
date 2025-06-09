@@ -6,12 +6,15 @@ import authService from "../../../services/auth.service";
 import OrderPreview from "../../modal/OrderPreview";
 
 function ListOrderHistory({ order,setLoading }) {
-  const { address, fuel, isAccepted,isCanceled,isDelivered,method,userId,_id} = order;
+  const { address, fuel = { petrol: null, diesel: null }, isAccepted = { status: false }, isCanceled = { status: false }, isDelivered = { status: false }, method = { cash: 0, online: { amount: 0 } }, userId, _id, stationId } = order;
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const [stationInfo, setStationInfo] = useState(null);
+
   useEffect(()=>{
-    getUserInfo()
-  },[])
+    getUserInfo();
+    getStationInfo();
+  },[]);
   
   const [userInfo,setUserInfo] = useState(null);
   const getUserInfo = async () =>{
@@ -19,6 +22,21 @@ function ListOrderHistory({ order,setLoading }) {
       await authService.getUserInfo(userId).then(
         (response) => {
             setUserInfo(response.data);
+        },
+        (error) => {
+          console.log(error.response);
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const getStationInfo = async () => {
+    try {
+      await authService.getFuelStationByID(stationId).then(
+        (response) => {
+          setStationInfo(response.data);
         },
         (error) => {
           console.log(error.response);
@@ -96,33 +114,38 @@ function ListOrderHistory({ order,setLoading }) {
 
   const renderedOrderInfo = <>
 <p className="text-grey-dark font-thin text-sm leading-normal text-white">
+  {stationInfo && (
+    <p className="text-grey-dark font-thin text-sm leading-normal text-white">
+      Station Name: {stationInfo.name}
+    </p>
+  )}
   Fuel : <br/>
-  {(fuel.petrol)?<>
+  {fuel?.petrol && <>
     Petrol : 
     Price  : {fuel.petrol.price}<br/>
     Quantity:{fuel.petrol.quantity}
-  </>:null}
-  {(fuel.diesel)?<>
+  </>}
+  {fuel?.diesel && <>
     Diesel   : 
     Price  : {fuel.diesel.price}<br/>
     Quantity:{fuel.diesel.quantity}
-  </>:null}
+  </>}
   <br />
 </p>
  <p className="text-grey-dark font-thin text-sm leading-normal text-white">
-  Cost : Rs-{(method.cash)?method.cash:method.online.amount}
+  Cost : Rs-{method?.cash || method?.online?.amount || 0}
 <br />
 </p>
-<p className={` ${(!isAccepted.status && !isDelivered.status && !isCanceled.status)? " text-yellow-500 font-bold ": "hidden" }`}>
+<p className={` ${(!isAccepted?.status && !isDelivered?.status && !isCanceled?.status)? " text-yellow-500 font-bold ": "hidden" }`}>
                       Status : Pending
                   </p>
-<p className={` ${(isAccepted.status && !isDelivered.status)? " text-[#32CD32] font-bold ": "hidden" }`}>
+<p className={` ${(isAccepted?.status && !isDelivered?.status)? " text-[#32CD32] font-bold ": "hidden" }`}>
                       Status : On The Way
                   </p>
-                  <p className={` ${(isCanceled.status)? " text-red-900 font-bold ": "hidden" }`}>
+                  <p className={` ${(isCanceled?.status)? " text-red-900 font-bold ": "hidden" }`}>
                       Status : Canceled
                   </p>
-                  <p className={` ${(isDelivered.status)? " text-[#32CD32] font-bold ": "hidden" }`}>
+                  <p className={` ${(isDelivered?.status)? " text-[#32CD32] font-bold ": "hidden" }`}>
                       Status : Delivered
 </p>
 

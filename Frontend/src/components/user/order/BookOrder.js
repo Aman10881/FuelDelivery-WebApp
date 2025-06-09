@@ -7,6 +7,7 @@ import { getDistance } from "geolib";
 import {BsFuelPump} from "react-icons/bs"
 import BookPreview from "../../modal/BookPreview";
 import { toast } from "react-toastify";
+
 function BookOrder() {
   const { id } = useParams();
   const [station, setStation] = useState(null);
@@ -21,8 +22,6 @@ function BookOrder() {
   const [dieselPrice,setDieselPrice] = useState(0)
 
   const [totalPrice,setTotalPrice] = useState(0);
-  const [transactionData,setTransactionData] = useState(null);
-
   const [method, setMethod] = useState();
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
@@ -65,24 +64,6 @@ function BookOrder() {
     }
     console.log(user);
   }, [user]);
-
-  useEffect(()=>{
-    console.log(transactionData)
-    if(transactionData){
-      if(transactionData.msg === "Success"){
-        const updatedMethod = {"online" : {
-          ...method.online,
-          transactionID : transactionData.paymentId,
-          status : 'success'
-        }}
-        postOrder(updatedMethod); 
-        setMethod(updatedMethod);
-      }else{
-        toast.error(transactionData.msg)
-      }
-      setTransactionData(null);
-    }
-  },[transactionData])
   
   useEffect(() => {
     getResposne();
@@ -108,12 +89,9 @@ function BookOrder() {
   const proceedOrder =  (e) =>{
       e.preventDefault();
       setShowOrderModal(false)
-      if(method.online){
-       authService.displayRazorpay(totalPrice,setTransactionData)
-      }else{
-        postOrder(method);
-      }
+      postOrder(method);
   } 
+
   const postOrder = async (method) => {
     const fuel  = {
     }
@@ -132,13 +110,14 @@ function BookOrder() {
       }
       fuel.diesel = diesel;
     }
+
     try {
       await authService.postOrder(user.userId, id, address,fuel, method).then(
         (response) => {
           if(response.data.order){
-           toast.success("Order Placed Successfully")
-           navigate('/user/')
-           return;
+            toast.success("Order Placed Successfully")
+            navigate('/user/')
+            return;
           }
           toast.warning("Some Issue Detected")
         },
@@ -149,9 +128,6 @@ function BookOrder() {
     } catch (err) {
       console.log(err);
     }
-  };
-  const onHandleSubmit = (e) => {
-    e.preventDefault();
   };
 
   const renderedInfo = station ? (
@@ -194,7 +170,7 @@ function BookOrder() {
           <h1 className="text-center text-[54px]">Book Order</h1>
           <p></p>
         </div>
-        <form class="w-full max-w-sm" onSubmit={onHandleSubmit}>
+        <form class="w-full max-w-sm" onSubmit={proceedOrder}>
           <div class="gap-3 md:flex md:items-center mb-6 ">
             <div class="">
               <label
@@ -236,87 +212,50 @@ function BookOrder() {
                 Petrol
               </label>
             </div>
-            <div class="mb-3 lg:mb-0">
+            <div class="">
               <input
                 class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
                 id="inline-newPassword"
                 type="number"
-                onChange={(e) => {
-                  if(e.target.value > station.quantity.petrol.quantity){
-                    toast.warning("Quantity Not Available")
-                  }
-                  else{
-                  setPetrolQuantity(e.target.value)
-                  }
-                }}
+                placeholder="Enter Quantity"
                 value={petrolQuantity}
-                placeholder="Quantity"
-              />
-            </div>
-            <div class="mb-3 lg:mb-0">
-              <input
-                class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-                id="inline-newPassword"
-                type="number"
-                readOnly
-                onChange={(e) => {
-                  setPetrolPrice(e.target.value)
-                }}
-                value={petrolPrice}
-                placeholder="Price"
+                onChange={(e) => setPetrolQuantity(e.target.value)}
               />
             </div>
           </div>
-          <div class="gap-3 md:flex md:items-center mb-6 ">
+          <div class="gap-3 md:flex md:items-center mb-6">
             <div class="">
               <label
                 class="block text-white font-bold md:text-right mb-1 md:mb-0 pr-4"
-                for="inline-diesel"
+                for="inline-confirmPassword"
               >
                 Diesel
               </label>
             </div>
-            <div class="mb-3 lg:mb-0">
+            <div class="">
               <input
                 class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-                id="inline-diesel"
+                id="inline-confirmPassword"
                 type="number"
-                onChange={(e) => {
-                  if(e.target.value > station.quantity.diesel.quantity){
-                    toast.warning("Quantity Not Available")
-                  }else{
-                  setDieselQuantity(e.target.value)
-                  }
-                }}
+                placeholder="Enter Quantity"
                 value={dieselQuantity}
-                placeholder="Quantity"
-              />
-            </div>
-            <div class="mb-3 lg:mb-0">
-              <input
-                class="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-4 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-purple-500"
-                id="inline-diesel"
-                type="number"
-                readOnly
-                value={dieselPrice}
-                placeholder="Price"
+                onChange={(e) => setDieselQuantity(e.target.value)}
               />
             </div>
           </div>
-           
           <div className="actions w-full flex flex-col gap-4">
             <button className="bg-[#fe6f2b] hover:bg-[#F59337] w-full text-white font-bold py-2 px-4 rounded-full"
-            onClick={(e)=>{
-              e.preventDefault();
-              if(!address){
-                return toast.warning("Please Fill In address");
-              }
-              if(petrolQuantity || dieselQuantity){
-              setShowOrderModal(!showOrderModal)
-              }else{
-                toast.warning("Please Fill In some Quantity");
-              }
-            }}
+              onClick={(e)=>{
+                e.preventDefault();
+                if(!address){
+                  return toast.warning("Please Fill In address");
+                }
+                if(petrolQuantity || dieselQuantity){
+                setShowOrderModal(!showOrderModal)
+                }else{
+                  toast.warning("Please Fill In some Quantity");
+                }
+              }}
             >
               Order
             </button>
@@ -330,17 +269,18 @@ function BookOrder() {
               Cancel
             </button>
           </div>
-          {
-            showOrderModal?
-            <BookPreview address={address} method={method} totalPrice={totalPrice} setTotalPrice={setTotalPrice} setMethod={setMethod} order={station} user={userInfo} petrolPrice={petrolPrice} petrolQuantity={petrolQuantity} dieselQuantity={dieselQuantity} dieselPrice={dieselPrice}  setOnCancel={setShowOrderModal} 
-            setOnProceed={
-              proceedOrder
-            }/>
-            :null
-        }
         </form>
       </div>
+      {
+        showOrderModal?
+        <BookPreview address={address} method={method} totalPrice={totalPrice} setTotalPrice={setTotalPrice} setMethod={setMethod} order={station} user={userInfo} petrolPrice={petrolPrice} petrolQuantity={petrolQuantity} dieselQuantity={dieselQuantity} dieselPrice={dieselPrice}  setOnCancel={setShowOrderModal} 
+        setOnProceed={
+          proceedOrder
+        }/>
+        :null
+    }
     </div>
   );
 }
+
 export default BookOrder;
