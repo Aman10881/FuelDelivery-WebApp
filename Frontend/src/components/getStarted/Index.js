@@ -9,14 +9,14 @@ function Index(){
                 <img src={GetStarted} alt={"Get Started"}  style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <div className="text-white flex flex-col gap-10">
-                <div className="header">
-                    <h1 className="text-center text-[54px]">
-                        Let's Started
-                    </h1>
-                    <p>
-                    Your all-in-one roadside assistance: Fuel, Battery, Towing, and more.
-                    </p>
-                </div>
+               <div className="header">
+    <h1 className="text-center text-[54px] font-bold text-[#fe6f2b]">
+        Get Started
+    </h1>
+    <p className="text-xl text-gray-300 font-light">
+        Your trusted fuel delivery partner - Fast, Reliable, and Convenient
+    </p>
+</div>
                 <div className="actions w-full flex flex-col gap-4">
                     <button className="bg-[#fe6f2b] hover:bg-[#F59337] text-white font-bold py-2 px-4 rounded-full"
                     onClick={()=>{
